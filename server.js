@@ -17,7 +17,7 @@ const HOST_AWAY = 2 * 60 * 1000;      // 방장이 2분 넘게 끊겨 있으면 
 const rooms = new Map();
 const sockets = new Map(); // playerId -> ws
 
-const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json" };
+const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".json": "application/json", ".webmanifest": "application/manifest+json" };
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, "http://x");

@@ -69,7 +69,7 @@ const urlRoom = (new URLSearchParams(location.search).get("room") || location.pa
 const ui = {
   name: LS.get("roundtable-spy-name") || "",
   code: urlRoom || "",
-  roleOpen: false, error: null, notice: null,
+  roleOpen: false, error: null, notice: null, installHidden: !!LS.get("roundtable-install-hidden"),
   connected: false, busy: false, animQuest: null, lastPhaseKey: null
 };
 
@@ -250,7 +250,32 @@ function vHome(){
     <div class="muted" style="margin-bottom:10px">방을 만들면 코드와 링크(QR)를 친구들에게 보여주세요.</div>
     <button class="${ui.code?"":"primary"}" data-act="create" ${ui.busy?"disabled":""}>방 만들기</button>
   </div>
-  ${ui.error?`<div class="err">${esc(ui.error)}</div>`:""}`;
+  ${ui.error?`<div class="err">${esc(ui.error)}</div>`:""}
+  ${installCard()}`;
+}
+
+// ---------- 앱 설치 (홈 화면에 추가) ----------
+const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+let installEvt = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; if(!S) render(); });
+window.addEventListener("appinstalled", () => { installEvt = null; ui.installed = true; if(!S) render(); });
+if("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(()=>{}));
+
+function installCard(){
+  if(standalone() || ui.installHidden) return "";
+  if(ui.installed) return `<div class="card center muted">✓ 설치됐어요! 홈 화면의 <b>원탁</b> 아이콘으로 여세요.</div>`;
+  let body;
+  if(installEvt) body = `<button class="primary" data-act="install">📲 앱으로 설치하기</button>`;
+  else if(isIOS) body = `<ol><li>Safari 아래쪽 <b>공유 버튼</b>(□↑)을 누르고</li><li><b>홈 화면에 추가</b>를 누르세요</li></ol>
+    <div class="muted" style="margin-top:6px">카카오톡 등에서 열었다면 먼저 <b>Safari로 열기</b>를 해주세요.</div>`;
+  else body = `<ol><li>브라우저 메뉴(⋮)를 누르고</li><li><b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 누르세요</li></ol>
+    <div class="muted" style="margin-top:6px">카카오톡 등에서 열었다면 먼저 <b>다른 브라우저로 열기</b>(Chrome/삼성 인터넷)를 해주세요.</div>`;
+  return `<div class="card install">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">📲 앱으로 설치</h2><button class="small ghost" data-act="installHide">닫기</button></div>
+    <div class="muted" style="margin:6px 0 10px">홈 화면에 아이콘이 생기고 주소창 없이 전체 화면으로 열려요.</div>
+    ${body}
+  </div>`;
 }
 
 function joinUrl(){ return `${location.origin}/?room=${S.code}`; }
@@ -548,6 +573,8 @@ const ACT = {
     ui.busy = true; ui.notice = null; act({t:"join", code:c, name:n}); render();
   },
   forget(){ leaveLocal(); },
+  install(){ if(!installEvt) return; installEvt.prompt(); installEvt.userChoice.finally(()=>{ installEvt = null; render(); }); },
+  installHide(){ ui.installHidden = true; LS.set("roundtable-install-hidden", true); render(); },
   reclaim(){ ui.replaced = false; session = LS.get(SESSION_KEY) || session; connect(); render(); },
   leave(){ if(confirm("방에서 나갈까요?")) act({t:"leave"}); },
   share(){

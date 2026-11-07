@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#14121c">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="원탁">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>원탁</title>
 <style>
 :root{
@@ -129,6 +136,9 @@ details summary{cursor:pointer;color:var(--muted);font-size:14px;margin-top:6px}
 .vcell.y{background:var(--good-soft)} .vcell.n{background:var(--evil-soft)}
 .conn{position:sticky;top:0;z-index:5;background:#5c1d22;color:#ffd2d4;text-align:center;padding:8px;border-radius:10px;margin-bottom:12px;font-size:14px}
 details.card summary{color:var(--text);font-size:16px}
+body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+.install{border-color:var(--gold)}
+.install ol{margin:8px 0 0;padding-left:20px;line-height:1.7;font-size:15px}
 .topbar{display:flex;justify-content:flex-end;margin:-4px 0 10px}
 .menubtn{text-align:left}
 .menubtn .s{display:block;font-weight:400;font-size:14px;margin-top:2px;opacity:.8}

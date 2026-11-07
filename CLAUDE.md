@@ -61,6 +61,11 @@
 - 10인: 멀린+퍼시벌+신하 4 vs 암살자+모르가나+모드레드+(오베론 / 수하)
 - 로비에서 방장이 직접 토글하기 전까지는 인원이 바뀔 때 추천 조합이 자동 적용됨.
 
+## 앱 설치 (PWA)
+- `public/manifest.webmanifest`, `public/sw.js`(네트워크 우선, 오프라인 때만 캐시), `public/icons/`(원탁+칼 아이콘. `icon*.svg`가 원본, PNG는 Playwright로 렌더).
+- 첫 화면에 "📲 앱으로 설치" 카드: 안드로이드는 설치 버튼(beforeinstallprompt), 아이폰은 "공유 → 홈 화면에 추가" 안내. 설치된 상태(standalone)거나 닫으면 숨김.
+- 정적 파일을 바꿔서 캐시 문제가 생기면 `sw.js`의 `CACHE` 이름 버전을 올릴 것.
+
 ## 배포
 - 운영 주소: https://roundtable-spy.onrender.com (Render 무료, Blueprint. `main`에 푸시하면 자동 재배포 → **진행 중인 방이 사라지니 게임 중엔 푸시 금지**)
 - `render.yaml` 포함 (Render 무료 플랜, Blueprint로 바로 배포). 무료 플랜은 15분 유휴 시 잠듦.

@@ -1,0 +1,18 @@
+{
+  "name": "abalon-multi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "원탁의 밀정 온라인 - 각자 자기 폰으로 하는 정체 숨기기 게임",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "ws": "^8.22.1"
+  }
+}

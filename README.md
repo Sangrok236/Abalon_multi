@@ -27,6 +27,9 @@ npm start          # http://localhost:3000
 (노트북 IP 확인: macOS `ipconfig getifaddr en0`, Windows `ipconfig`)
 
 ### 인터넷에 올리기 (Render 무료)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Sangrok236/Abalon_multi)
+
+위 버튼을 누르면 설정(무료 플랜, 싱가포르 리전)이 자동으로 채워집니다. 직접 하려면:
 1. [render.com](https://render.com) 가입 → **New → Blueprint** → 이 저장소 선택 (`render.yaml`이 설정을 다 해줌)
 2. 배포가 끝나면 나오는 `https://...onrender.com` 주소로 접속
 - 무료 플랜은 15분간 아무도 안 쓰면 잠들어요. 첫 접속에 30초~1분 걸릴 수 있으니 **게임 전에 한 번 미리 열어두세요.**

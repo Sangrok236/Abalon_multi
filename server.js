@@ -163,4 +163,4 @@ setInterval(() => {
   }
 }, 15000);
 
-server.listen(PORT, () => console.log(`원탁의 밀정 서버: http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`원탁 서버: http://localhost:${PORT}`));

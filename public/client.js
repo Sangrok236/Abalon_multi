@@ -12,6 +12,15 @@ const ROLES = {
   oberon:   {name:"오베론",   team:"e", desc:"악이지만 다른 악을 모르고, 다른 악도 당신을 모릅니다. (멀린에게는 보임)"},
   minion:   {name:"수하",     team:"e", desc:"동료 악을 압니다. 원정을 실패시키고 정체를 숨기세요."}
 };
+// 퍼시벌 설명은 모르가나 유무에 따라 달라짐
+function roleDesc(k){
+  if(k==="percival"){
+    return S && S.game && S.game.roleCounts.morgana
+      ? "멀린과 모르가나가 누군지 압니다. 멀린을 찾아서 지키세요."
+      : "멀린이 누군지 압니다. 멀린을 지키세요.";
+  }
+  return ROLES[k].desc;
+}
 const ROLE_ORDER = ["merlin","percival","servant","assassin","morgana","mordred","oberon","minion"];
 const P = (percival,morgana,mordred,oberon) => ({percival,morgana,mordred,oberon});
 const RECOMMEND = {
@@ -112,6 +121,7 @@ function onState(st){
     ui.lastPhaseKey = key;
     if(prevPhase && myTurn()) try{ navigator.vibrate && navigator.vibrate(120); }catch(e){}
     if(st.phase !== "reveal") ui.roleOpen = false;
+    if(st.phase === "lobby" || st.phase === "end" || (prevPhase !== "reveal" && st.phase === "reveal")) ui.menuOpen = false;
     ui.error = null;
     if(prevPhase !== st.phase) window.scrollTo(0,0);
   }
@@ -168,7 +178,7 @@ function roleCard(){
   return `<div class="role ${r.team}">
     <div class="pill ${r.team}">${r.team==="g"?"선의 세력":"악의 세력"}</div>
     <div class="name">${r.name}</div>
-    <div class="desc">${r.desc}</div>
+    <div class="desc">${roleDesc(g.my.role)}</div>
     <div class="info">${infoHtml(g.my.info)}</div>
   </div>`;
 }
@@ -183,7 +193,7 @@ function roleGuide(){
   const cnt = G().roleCounts, mine = G().my.role;
   const items = ROLE_ORDER.filter(k=>cnt[k]).map(k=>{
     const r = ROLES[k];
-    return `<div class="gi ${k===mine?"me":""}"><span class="pill ${r.team}">${r.team==="g"?"선":"악"}</span> <b>${r.name}</b>${cnt[k]>1?` ×${cnt[k]}`:""}${k===mine?' <span class="crown">← 나</span>':""}<br><span class="muted">${r.desc}</span></div>`;
+    return `<div class="gi ${k===mine?"me":""}"><span class="pill ${r.team}">${r.team==="g"?"선":"악"}</span> <b>${r.name}</b>${cnt[k]>1?` ×${cnt[k]}`:""}${k===mine?' <span class="crown">← 나</span>':""}<br><span class="muted">${roleDesc(k)}</span></div>`;
   }).join("");
   return `<div class="card"><h2>이번 게임 역할 설명</h2><div class="guide">${items}</div></div>`;
 }
@@ -202,9 +212,19 @@ function playerChips(mark){
   }).join("")}</div>`;
 }
 
-function hostFooter(){
-  if(!isHost() || S.phase==="end") return "";
-  return `<div class="gap"></div><button class="ghost" data-act="toLobbyAsk">방장 메뉴 · 게임 중단하고 로비로</button>`;
+function vMenu(){
+  const host = isHost();
+  return `<div class="card">
+    <h2>메뉴</h2>
+    <button data-act="menuClose">← 게임으로 돌아가기</button>
+    <div class="gap"></div>
+    ${host ? `
+    <button class="menubtn" data-act="againAsk">🔄 역할 다시 뽑기<span class="s">같은 멤버·같은 설정으로 처음부터</span></button>
+    <div class="gap"></div>
+    <button class="evil menubtn" data-act="toLobbyAsk">🏠 게임 종료 · 로비로<span class="s">인원·순서·역할 설정부터 다시</span></button>`
+    : `<div class="muted center">다시 하기나 게임 종료는 방장(${esc((S.players.find(p=>p.id===S.hostId)||{}).name||"")})만 할 수 있어요.</div>`}
+  </div>
+  ${roleGuide()}`;
 }
 
 function waitLine(text){ return `<div class="wait"><span class="spin"></span>${text}</div>`; }
@@ -212,7 +232,7 @@ function waitLine(text){ return `<div class="wait"><span class="spin"></span>${t
 // ---------- 화면 ----------
 function vHome(){
   return `
-  <h1>🗡️ 원탁의 밀정</h1>
+  <h1>🗡️ 원탁</h1>
   <div class="sub">각자 자기 폰으로 하는 정체 숨기기 게임</div>
   ${ui.notice?`<div class="card center muted">${esc(ui.notice)}</div>`:""}
   <div class="card">
@@ -330,7 +350,7 @@ function vReveal(){
   }
   return `${main}
     <div class="card"><h2>역할 확인 ${cnt}/${g.count}</h2>${playerChips(i=>g.revealed[i])}</div>
-    ${roleGuide()}${hostFooter()}`;
+    ${roleGuide()}`;
 }
 
 function vTeam(){
@@ -347,7 +367,7 @@ function vTeam(){
     ${g.rejects===4?`<div class="err">⚠️ 이번에 부결되면 악이 승리합니다!</div>`:""}
   </div>
   ${ui.error?`<div class="err">${esc(ui.error)}</div>`:""}
-  ${myRoleBox()}${logCard()}${hostFooter()}`;
+  ${myRoleBox()}${logCard()}`;
 }
 
 function teamPills(team){ return team.map(i=>`<span class="pill">${pname(i)}</span>`).join(" "); }
@@ -369,7 +389,7 @@ function vVote(){
   </div>
   <div class="card"><h2>투표 ${cnt}/${g.count}</h2>${playerChips(i=>g.voted[i])}</div>
   ${isLeader() && cnt===0?`<button class="ghost" data-act="cancelProposal">← 제안 취소하고 팀 다시 고르기</button><div class="gap"></div>`:""}
-  ${myRoleBox()}${hostFooter()}`;
+  ${myRoleBox()}`;
 }
 
 function canAdvance(){ return isHost() || isLeader(); }
@@ -395,7 +415,7 @@ function vVoteResult(){
     <div class="gap"></div>
     ${nextBtn(r.pass?"원정 출발 →":"다음 대표에게 →")}
   </div>
-  ${myRoleBox()}${hostFooter()}`;
+  ${myRoleBox()}`;
 }
 
 function vQuest(){
@@ -422,7 +442,7 @@ function vQuest(){
   return `${board()}${main}
   <div class="card"><h2>원정대</h2>${chips}</div>
   ${ui.error?`<div class="err">${esc(ui.error)}</div>`:""}
-  ${myRoleBox()}${hostFooter()}`;
+  ${myRoleBox()}`;
 }
 
 function vQuestResult(){
@@ -439,7 +459,7 @@ function vQuestResult(){
     <div class="gap"></div>
     ${nextBtn()}
   </div>
-  ${myRoleBox()}${logCard()}${hostFooter()}`;
+  ${myRoleBox()}${logCard()}`;
 }
 
 function vAssassin(){
@@ -455,7 +475,7 @@ function vAssassin(){
     <div class="plist">${btns}</div>
     ${amA?`<div class="gap"></div><button class="evil" data-act="kill" ${g.assassinTarget==null?"disabled":""}>이 사람을 암살</button>`:""}
   </div>
-  ${myRoleBox()}${hostFooter()}`;
+  ${myRoleBox()}`;
 }
 
 function vEnd(){
@@ -478,6 +498,7 @@ function vEnd(){
     : waitLine("방장이 다음 게임을 준비하는 중…")}`;
 }
 
+const NO_MENU = ["lobby","end"];
 const VIEWS = {lobby:vLobby, reveal:vReveal, team:vTeam, vote:vVote, voteResult:vVoteResult, quest:vQuest, questResult:vQuestResult, assassin:vAssassin, end:vEnd};
 
 function render(){
@@ -491,7 +512,9 @@ function render(){
   if(ui.replaced) html = `<div class="pass"><div>다른 탭(또는 기기)에서 같은 자리로 접속했어요.</div><button class="primary" data-act="reclaim">여기서 계속하기</button></div>`;
   else if(session && !S) html = `<div class="pass">${waitLine(ui.connected?"방에 다시 들어가는 중…":"서버에 연결하는 중…")}<button class="ghost" data-act="forget">처음 화면으로</button></div>`;
   else if(!S) html = vHome();
-  else html = (VIEWS[S.phase] || vLobby)();
+  else if(ui.menuOpen && !NO_MENU.includes(S.phase)) html = vMenu();
+  else html = (NO_MENU.includes(S.phase) ? "" : `<div class="topbar"><button class="small ghost" data-act="menuOpen">☰ 메뉴 · 다시하기</button></div>`)
+            + (VIEWS[S.phase] || vLobby)();
   const bar = !ui.connected && !ui.replaced ? `<div class="conn">📡 연결이 끊겼어요. 다시 연결하는 중…</div>` : "";
   $app.innerHTML = bar + html;
 
@@ -529,7 +552,7 @@ const ACT = {
   leave(){ if(confirm("방에서 나갈까요?")) act({t:"leave"}); },
   share(){
     const url = joinUrl();
-    if(navigator.share){ navigator.share({title:"원탁의 밀정", text:`방 코드 ${S.code}`, url}).catch(()=>{}); return; }
+    if(navigator.share){ navigator.share({title:"원탁", text:`방 코드 ${S.code}`, url}).catch(()=>{}); return; }
     (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(()=>alert("링크를 복사했어요!"), ()=>prompt("이 링크를 복사하세요", url));
   },
   move(el){ act({t:"move", id:el.dataset.id, d:+el.dataset.d}); },
@@ -558,7 +581,10 @@ const ACT = {
   kill(){ if(confirm(`${S.players[G().assassinTarget].name}님을 암살할까요? 되돌릴 수 없어요.`)) act({t:"kill"}); },
   again(){ act({t:"again"}); },
   toLobby(){ act({t:"toLobby"}); },
-  toLobbyAsk(){ if(confirm("게임을 중단하고 모두 로비로 돌아갈까요?")) act({t:"toLobby"}); }
+  toLobbyAsk(){ if(confirm("정말 게임을 끝내고 모두 로비로 돌아갈까요?")) { ui.menuOpen=false; act({t:"toLobby"}); } },
+  againAsk(){ if(confirm("역할을 새로 뽑아서 처음부터 다시 할까요?")) { ui.menuOpen=false; act({t:"again"}); } },
+  menuOpen(){ ui.menuOpen = true; ui.roleOpen = false; render(); window.scrollTo(0,0); },
+  menuClose(){ ui.menuOpen = false; render(); window.scrollTo(0,0); }
 };
 
 $app.addEventListener("click", e=>{

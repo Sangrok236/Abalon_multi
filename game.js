@@ -191,7 +191,8 @@ class Room {
         this.start();
         return;
       case "again":
-        host(); phase("end");
+        host();
+        if (this.phase === "lobby") fail("지금은 할 수 없는 동작이에요.");
         this.start();
         return;
       case "toLobby":
